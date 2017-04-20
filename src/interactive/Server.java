@@ -3,7 +3,6 @@ package interactive;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 
 public class Server {

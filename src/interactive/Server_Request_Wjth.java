@@ -8,11 +8,8 @@ import java.net.Socket;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import sun.nio.cs.ext.ISCII91;
-
 
 public class Server_Request_Wjth {
-     private String Request;     //功能唯一标识
      private String MD5;         //文件MD5 用于验证文件是否正确
      private String FileSize;    //文件大小，用于验证文件是否正确和接收文件。
      private String FileDir;     //文件处于哪个目录
@@ -33,8 +30,9 @@ public class Server_Request_Wjth {
          
          
          
-		 
-		 if(!server_json.resolvejson(RequestString))
+         JSONObject json = null;
+         //解析json
+		 if(!server_json.resolvejson(RequestString,json))
 		 {
 			 LOG.ReleaseLogger("解析json错误，结束本次连接！");
 			 os.write(server_json.getResponseString().getBytes());
@@ -44,8 +42,17 @@ public class Server_Request_Wjth {
              return false;
 		 }
 		 
-		//转换成json
-		JSONObject json=new JSONObject(RequestString);
+		 //将json值转移到变量
+		 if(!MakeParameter(server_json, json))
+		 {
+			LOG.ReleaseLogger("解析json错误，结束本次连接！");
+			os.write(server_json.getResponseString().getBytes());
+            os.flush();
+            is.close();
+            os.close(); 
+            return false;
+			
+		 }
 		 
 		 
 		 
@@ -54,12 +61,7 @@ public class Server_Request_Wjth {
 			LOG.getTrace(e);
 			return false;
 		
-	    } catch (JSONException e) {
-	    	LOG.ReleaseLogger("json转换错误，错误的请求串！");
-			LOG.getTrace(e);
-			server_json.Responsebzqxy();
-			return false;
-		} finally {    
+	    }  finally {    
          if (clientSocket != null) {    
              try {    
             	 clientSocket.close();    
@@ -74,11 +76,28 @@ public class Server_Request_Wjth {
 	 }
 	
 	
-	
-	
-	
-	
-	
+	 public boolean MakeParameter(Server_Json server_json,JSONObject json)
+	 {
+		 
+		 if(!json.has("MD5")||!json.has("FileSize")||!json.has("FileDir")||!json.has("FileName"))
+		 {
+			 server_json.Responseqscs(server_json.getRequest());
+			 return false;
+		 }
+		 try {
+		 MD5=json.getString("MD5");
+		 FileSize=json.getString("FileSize");
+		 FileDir=json.getString("FileDir");
+		 FileName=json.getString("FileName");
+		 } catch (JSONException e) {
+				// TODO 自动生成的 catch 块
+			   LOG.ReleaseLogger("json处理错误！");
+			   LOG.getTrace(e);
+			   server_json.Responsebzqxy();
+			   return false;
+			}
+		return true;
+	 }
 	
 	   
 }
