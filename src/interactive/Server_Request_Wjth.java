@@ -68,7 +68,7 @@ public class Server_Request_Wjth {
              } catch (Exception e) {    
             	 clientSocket = null;    
                  LOG.ReleaseLogger("服务器关闭异常！");    
-                 LOG.getTrace(e);
+                 LOG.ReleaseLogger(LOG.getTrace(e));
              }    
          }    
      }   
@@ -92,7 +92,7 @@ public class Server_Request_Wjth {
 		 } catch (JSONException e) {
 				// TODO 自动生成的 catch 块
 			   LOG.ReleaseLogger("json处理错误！");
-			   LOG.getTrace(e);
+			   LOG.ReleaseLogger(LOG.getTrace(e));
 			   server_json.Responsebzqxy();
 			   return false;
 			}

@@ -92,12 +92,12 @@ public class Server_Json {
 			   }
 			   catch (JSONException e) {
 				   LOG.ReleaseLogger("json处理错误！");
-				   LOG.getTrace(e);
+				   LOG.ReleaseLogger(LOG.getTrace(e));
 				   Responsebzqxy();
 				   return false;
 				} catch (ParseException e) {
 					LOG.ReleaseLogger("时间参数错误！");
-				    LOG.getTrace(e);
+					LOG.ReleaseLogger(LOG.getTrace(e));
 				    Responsesjcw(getRequest());
 				    return false;
 			}

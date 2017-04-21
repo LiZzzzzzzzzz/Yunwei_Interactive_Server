@@ -9,21 +9,18 @@ public class Server {
 
 	public static String md5key = "liuzhen@..11ZYJ!";    //请求配置秘钥
 	public static final String aesrequestkey="liu.request1ZYJ!"; //第一次请求秘钥  写入程序 固定秘钥
-
+    public static String FileHomeDir="d:/test";
 	
 	/**
 	 * @param args
 	 * @throws JSONException 
 	 */
-	public static void main(String[] args) throws JSONException{
-		
-		// TODO 自动生成的方法存根
-		  
+	public static void main(String[] args){
 		LOG.Init("log", 1);
+		Server_FileOperation server_FileOperation=new Server_FileOperation();
+		server_FileOperation.FileInit("", "app",1);
 		
-			   LOG.ReleaseLogger("aa");
-		   
-			
+		server_FileOperation.WhiteFilesExist("config.ini;;;ffsf;;;dfsfasdfa;;;");
 	}
 
 	
