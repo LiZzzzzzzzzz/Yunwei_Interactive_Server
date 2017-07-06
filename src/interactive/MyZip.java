@@ -1,13 +1,18 @@
 package interactive;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 
 public class MyZip{
@@ -160,5 +165,41 @@ public class MyZip{
     	return true;
     }
     
+	 @SuppressWarnings("resource")
+	public static boolean readZipFileDir(String file,String dirname) {
+        boolean ret=false;
+        try {
+         InputStream in = new BufferedInputStream(new FileInputStream(file));  
+         ZipInputStream zin = new ZipInputStream(in);  
+         ZipEntry ze;  
+		 ze = zin.getNextEntry();
+         String firstname=ze.getName();
+    
+         firstname=firstname.replace("/", "");
+         
+         if(firstname.equals(dirname))
+         {
+         LOG.ReleaseLogger(file+" ZIP主目录为"+dirname);
+         ret=true;
+         }
+         else 
+         {
+         LOG.ReleaseLogger(file+" ZIP主目录不为"+dirname);
+         ret=false;
+		 }
+         
+         zin.closeEntry(); 
+         in.close();
+        } 
+        
+         catch (IOException e) {
+ 			// TODO 自动生成的 catch 块
+        	 LOG.ReleaseLogger("文件处理错误!");
+        	 LOG.ReleaseLogger(LOG.getTrace(e));
+ 		}
+		return ret;  
+     }  
+
+	
 	
 }

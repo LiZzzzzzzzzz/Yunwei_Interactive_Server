@@ -17,10 +17,13 @@ public class Server {
 	 */
 	public static void main(String[] args){
 		LOG.Init("log", 1);
+	
 		Server_FileOperation server_FileOperation=new Server_FileOperation();
-		server_FileOperation.FileInit("", "app",1);
-		
-		server_FileOperation.WhiteFilesExist("config.ini;;;ffsf;;;dfsfasdfa;;;");
+		server_FileOperation.FileInit("/bak/test", "start.sh",0);
+		server_FileOperation.FileReplace("D:/test/bak/ywtb/start.sh");
+		//server_FileOperation.FileDelete();
+		//server_FileOperation.WhiteFilesExist("start.sh");
+		//server_FileOperation.FileZipReplace("D:/test/bak/test.zip", "start.sh");
 	}
 
 	

@@ -9,6 +9,10 @@ import java.util.Date;
 public class Server_FileOperation {
 	
 	
+	//错误码
+	public static final int NOFILE=1;  //文件不存在
+	
+	
 	private File file;       //文件信息
 	private String filedir;   //文件所在文件夹
 	private String filename;  //文件名
@@ -18,12 +22,11 @@ public class Server_FileOperation {
 	public boolean FileInit(String FileDir,String FileName,int FileType)
 	{
 		filetype=FileType;
-		filedir=FileDir;
+		filedir=Server.FileHomeDir+File.separator+FileDir;
 		filename=FileName;
-		if(filedir.length()!=0) filedir=File.separator+filedir;
 		
 		
-		filepath=Server.FileHomeDir+filedir+File.separator+filename;
+		filepath=filedir+File.separator+filename;
 		file=new File(filepath);    
 		if(FileType==0)
 		{
@@ -45,6 +48,7 @@ public class Server_FileOperation {
 			}
 			
 		}
+		
 		return true;
 	}
 	
@@ -61,23 +65,27 @@ public class Server_FileOperation {
 			return moveFile(filepath,bakFileDir);
 		}
 		LOG.ReleaseLogger("开始进行文件夹删除操作!");
-		return moveDirectory(filepath,bakFileDir);
+		return moveDirectory(filepath,bakFileDir+File.separator+filename);
 		
 	}
 
 	//文件重命名操作 
 	public boolean FileReName(String NewName)
 	{
-		File newFile=new File(Server.FileHomeDir+filedir+File.separator+NewName);
+		
+		File newFile=new File(filedir+File.separator+NewName);
 		if(filetype==0)
 		{
+			LOG.ReleaseLogger("开始进行文件重命名操作!");
 			if(!newFile.exists())    
 			{    
-				LOG.ReleaseLogger("开始进行文件重命名操作!");
 		        return file.renameTo(newFile);  
 			}
 			else
+			{
+			LOG.ReleaseLogger("新文件已经存在!");
 			return false;
+			}
 			
 		}
 		
@@ -87,7 +95,10 @@ public class Server_FileOperation {
 			 return file.renameTo(newFile);  
 		}
 		else
+		{
+		LOG.ReleaseLogger("新文件夹已经存在!");
 		return false;
+		}
 	}
 	
 	
@@ -107,7 +118,7 @@ public class Server_FileOperation {
 				{    
 					LOG.ReleaseLogger("开始进行文件重命名操作!");
 					AddBakFile(filepath);
-			        return file.renameTo(newFile);  
+			        return newFile.renameTo(file);  
 				}
 				
 			}
@@ -123,7 +134,6 @@ public class Server_FileOperation {
 	public boolean FileZipReplace(String ZipFilePath,String WhiteFiles)
 	{
 			
-			    
 				File ZipFile=new File(ZipFilePath);
 				if(filetype==1)
 				{
@@ -136,15 +146,35 @@ public class Server_FileOperation {
 					{    
 						LOG.ReleaseLogger("开始进行文件解压操作!");
 						String BakDirName=AddBakFile(filepath);;
-						if(MyZip.unzip(ZipFilePath, filepath))
+						if(MyZip.readZipFileDir(ZipFilePath, filename))
 						{
-							WhiteFilesMove(WhiteFiles,BakDirName);
+							if(MyZip.unzip(ZipFilePath, filedir))
+							{
+								WhiteFilesMove(WhiteFiles,BakDirName);
+							}
+							else
+							{
+							LOG.ReleaseLogger("文件解压失败!");
+							return false;
+							}
+							
+							
 						}
-						else
+						else 
 						{
-						LOG.ReleaseLogger("文件解压失败!");
-						return false;
+							if(MyZip.unzip(ZipFilePath, filepath))
+							{
+								WhiteFilesMove(WhiteFiles,BakDirName);
+							}
+							else
+							{
+							LOG.ReleaseLogger("文件解压失败!");
+							return false;
+							}
 						}
+						
+						
+
 					}
 					
 				}
@@ -154,7 +184,7 @@ public class Server_FileOperation {
 				
 	}
 	
-	
+	//检测压缩文件白名单
 	public boolean WhiteFilesExist(String WhiteFiles)
 	{
 		
@@ -173,6 +203,7 @@ public class Server_FileOperation {
 		return true;
 	}
 	
+	
 	void WhiteFilesMove(String WhiteFiles,String OldFileName)
 	{
 		LOG.ReleaseLogger("开始替换白名单文件，本次白名单字符串为:"+WhiteFiles);
@@ -183,7 +214,7 @@ public class Server_FileOperation {
         File oldFile;
 	    for (int i = 0 ; i <tmpWhiteFile.length ; i++ ) {
 	    	newfilepath=filepath+File.separator+tmpWhiteFile[i];
-	    	oldfilepath=Server.FileHomeDir+filedir+File.separator+OldFileName+tmpWhiteFile[i];
+	    	oldfilepath=OldFileName+File.separator+tmpWhiteFile[i];
 	    	
 	    	newFile=new File(newfilepath);
 	    	oldFile=new File(oldfilepath);
@@ -194,12 +225,18 @@ public class Server_FileOperation {
 	    		continue;
 	    	}
 	    	else
-	    	if(!newFile.exists())
+	    	if(newFile.exists())
 	    	{
+	    		LOG.DebugLogger("文件存在，备份待替换白名单文件"+newfilepath);
 	    		AddBakFile(newfilepath);
 	    	}
+	    	else 
+	    	{
+	    		LOG.ReleaseLogger("白名单文件文件不存在，直接复制文件。"+newfilepath);
+			}
 	    	oldFile.renameTo(newFile);
 	    } 
+	    LOG.ReleaseLogger("白名单文件替换完毕。");
 	}
 	
 	
@@ -207,36 +244,43 @@ public class Server_FileOperation {
 	String AddBakFile(String FilePath)
 	{
 		int randsum=0;
-		String tmpbakpath ;
-		File tmpfile;
+		String tmpbakpath="";
+		File oldfile=new File(FilePath);
+		if(!oldfile.exists())
+		{
+			LOG.ReleaseLogger("备份文件不存在。");
+			return tmpbakpath;
+		}
+		File newfile;
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");//设置日期格式
 		
 		
-		if(filetype==0)
+		if(oldfile.isFile())
 		{
 		    while (true)
 		    {
 		     tmpbakpath=FilePath+".bak."+df.format(new Date())+"_"+randsum;
-		     tmpfile=new File(tmpbakpath);
-		     if (!tmpfile .exists()  && !tmpfile .isDirectory())      
+		     newfile=new File(tmpbakpath);
+		     if (!newfile .exists()  && !newfile .isDirectory())      
 		     {       
 		 	    LOG.ReleaseLogger("创建备份文件："+tmpbakpath);  
-			    file.renameTo(tmpfile);
+		 	    oldfile.renameTo(newfile);
 			    break;
 		     } 
 		     randsum++;
 		     }
 		}
-		else 
+		else
+		if(oldfile.isDirectory())
 		{
 			while (true)
 			{
 			tmpbakpath=FilePath+"_bak_"+df.format(new Date())+"_"+randsum;
-			tmpfile=new File(tmpbakpath);
-			if  (!tmpfile .exists()  && !tmpfile .isDirectory())      
+			newfile=new File(tmpbakpath);
+			if  (!newfile .exists()  && !newfile .isDirectory())      
 			{       
 				    LOG.ReleaseLogger("创建备份文件夹："+tmpbakpath);  
-				    moveDirectory(filepath,tmpbakpath); 
+				    moveDirectory(FilePath,tmpbakpath); 
 				    break;
 			} 
 			randsum++;
@@ -255,7 +299,7 @@ public class Server_FileOperation {
 		if  (!tmpfile .exists()  && !tmpfile .isDirectory())      
 		{       
 			    LOG.ReleaseLogger("bak目录不存在，创建bak目录");  
-			    tmpfile .mkdir();    
+			    tmpfile.mkdir();    
 		} 
 		else   
 		{  
@@ -335,7 +379,7 @@ public class Server_FileOperation {
 	    * 注意移动文件夹时保持文件夹的树状结构 
 	    */  
 	   File[] sourceFiles = srcDir.listFiles();  
-	   for (File sourceFile : sourceFiles) {  
+	   for (File sourceFile:sourceFiles) {  
 	       if (sourceFile.isFile())  
 	           moveFile(sourceFile.getAbsolutePath(), destDir.getAbsolutePath());  
 	       else if (sourceFile.isDirectory())  
